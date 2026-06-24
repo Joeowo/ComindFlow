@@ -1,4 +1,4 @@
-0. python main.py
+0. cd review_agent & python main.py
 1. 不保证答案正确喵
 2. 请使用自己的deepseek api key喵
 3. 目前对大题支持较弱，我也没空做喵
