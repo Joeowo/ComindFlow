@@ -16,7 +16,7 @@ def check_api_config() -> bool:
     Returns:
         True表示配置完整，False表示需要配置
     """
-    return bool(DEEPSEEK_API_KEY and DEEPSEEK_API_KEY.startswith('sk-'))
+    return bool(DEEPSEEK_API_KEY and len(DEEPSEEK_API_KEY) >= 10)
 
 
 def setup_api_key():
@@ -56,15 +56,8 @@ def setup_api_key():
         console=console
     )
 
-    # 验证API Key格式
-    if not api_key.startswith('sk-'):
-        console.print()
-        console.print("[red]✗ API Key格式不正确，应以'sk-'开头[/red]")
-        console.print()
-        input("按 Enter 重试...")
-        return False
-
-    if len(api_key) < 20:
+    # 验证API Key长度（至少10个字符）
+    if len(api_key) < 10:
         console.print()
         console.print("[red]✗ API Key长度不正确[/red]")
         console.print()
