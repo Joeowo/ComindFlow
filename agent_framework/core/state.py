@@ -39,6 +39,29 @@ class AgentState(TypedDict):
     cached_terminology: Dict[str, str]  # 从 CONTEXT.md 解析的术语字典
     cached_task_progress: Dict[str, Any]  # 从 Task.md 解析的任务进度信息
 
+    # ========== F2 知识问答专用字段 ==========
+    user_question: str  # 用户提出的问题（F2 Workflow）
+    query_result: Optional[Dict[str, Any]]  # 知识查询结果（F2 Workflow）
+    generated_answer: Optional[str]  # 生成的回答（F2 Workflow）
+    knowledge_loaded: bool  # 知识库是否已加载（F2 Workflow）
+    cached_sources: Dict[str, str]  # 从 sources/ 目录加载的文档内容（F2 Workflow）
+
+    # ========== F1 Workflow 专用字段 ==========
+    topic: str  # 研究主题（F1 Workflow）
+    report_path: Optional[str]  # 研究报告路径（F1 Workflow）
+    key_concepts: list  # 关键概念列表（F1 Workflow）
+    tasks: list  # 任务列表（F1 Workflow）
+    current_questions: list  # 当前问题列表（F1 Workflow）
+    user_question_suggestions: list  # 用户问题建议（F1 Workflow）
+    answers: list  # 用户回答列表（F1 Workflow）
+    mastery_level: str  # 掌握程度（F1 Workflow）
+    round: int  # 当前轮次（F1 Workflow）
+
+    # ========== 确认机制字段 ==========
+    awaiting_confirmation: bool  # 是否等待用户确认
+    confirmation_prompt: Optional[str]  # 确认提示内容
+    next_node: Optional[str]  # 确认后的下一个节点
+
     # ========== 元数据 ==========
     workflow_name: str  # 当前 workflow 名称
     start_time: str  # 会话开始时间（ISO 格式）
@@ -226,6 +249,29 @@ def load_session_state(session_path: str | Path) -> AgentState:
         # 缓存层状态
         "cached_terminology": cached_terminology,
         "cached_task_progress": cached_task_progress,
+
+        # F2 知识问答专用字段
+        "user_question": "",
+        "query_result": None,
+        "generated_answer": None,
+        "knowledge_loaded": False,
+        "cached_sources": {},
+
+        # F1 Workflow 专用字段
+        "topic": "",
+        "report_path": None,
+        "key_concepts": [],
+        "tasks": [],
+        "current_questions": [],
+        "user_question_suggestions": [],
+        "answers": [],
+        "mastery_level": "",
+        "round": 0,
+
+        # 确认机制字段
+        "awaiting_confirmation": False,
+        "confirmation_prompt": None,
+        "next_node": None,
 
         # 元数据
         "workflow_name": "",
