@@ -1,0 +1,10 @@
+# AutoResearch 依赖包
+
+# API 请求
+requests>=2.31.0
+
+# 环境变量管理
+python-dotenv>=1.0.0
+
+# 可选: HTML 报告生成
+# pandoc (需要系统安装)
