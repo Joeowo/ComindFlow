@@ -4,10 +4,18 @@ pytest 配置和 fixtures
 为 S1 核心框架层 TDD 提供测试基础设施
 """
 
+import sys
+from pathlib import Path
+
+# 将 agent_framework 目录添加到 Python 路径
+# 这样测试中可以直接使用 from config.settings import ...
+framework_root = Path(__file__).parent.parent
+if str(framework_root) not in sys.path:
+    sys.path.insert(0, str(framework_root))
+
 import pytest
 import tempfile
 import shutil
-from pathlib import Path
 from typing import Dict, Any
 from datetime import datetime, timedelta
 
