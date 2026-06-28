@@ -291,12 +291,180 @@ def sync_to_persistence(state: AgentState) -> None:
         - 使用原子写入策略（临时文件 + 重命名）
         - 仅同步缓存层状态到文件
     """
+    import tempfile
+    import shutil
+    from pathlib import Path
+
     session_path = Path(state["session_path"])
 
-    # TODO: 实现原子写入逻辑
-    # 1. 将 cached_terminology 写回 CONTEXT.md
-    # 2. 将 cached_task_progress 写回 Task.md
-    # 3. 使用临时文件 + 原子重命名
+    # 确保会话目录存在
+    session_path.mkdir(parents=True, exist_ok=True)
 
-    # 当前为简化实现，后续完善
-    pass
+    # 1. 同步 cached_terminology 到 CONTEXT.md
+    cached_terminology = state.get("cached_terminology", {})
+    context_path = session_path / "CONTEXT.md"
+
+    # 构建 CONTEXT.md 内容
+    context_lines = [
+        "# Session 上下文",
+        "",
+        "## 术语定义",
+        ""
+    ]
+
+    for term, definition in cached_terminology.items():
+        context_lines.append(f"**{term}**")
+        context_lines.append(f": {definition}")
+        context_lines.append("")
+
+    if not cached_terminology:
+        context_lines.append("暂无术语定义")
+        context_lines.append("")
+
+    context_content = "\n".join(context_lines)
+
+    # 原子写入：临时文件 + 重命名
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.tmp', delete=False, encoding='utf-8') as tmp_file:
+        tmp_file.write(context_content)
+        tmp_path = tmp_file.name
+
+    try:
+        shutil.move(tmp_path, str(context_path))
+    except Exception:
+        # 清理临时文件
+        Path(tmp_path).unlink(missing_ok=True)
+        raise
+
+    # 2. 同步 cached_task_progress 到 Task.md
+    cached_task_progress = state.get("cached_task_progress", [])
+    task_path = session_path / "Task.md"
+
+    # 构建 Task.md 内容
+    task_lines = [
+        "# 学习任务",
+        "",
+        f"总任务数: {len(cached_task_progress)}",
+        "",
+        "## 任务列表",
+        ""
+    ]
+
+    if cached_task_progress:
+        for i, task in enumerate(cached_task_progress, 1):
+            task_id = task.get("id", f"task_{i}")
+            status = task.get("status", "pending")
+            round_num = task.get("round", 0)
+            concept = task.get("concept", "未命名")
+
+            task_lines.append(f"### 任务 {i}: {concept}")
+            task_lines.append(f"- **ID**: {task_id}")
+            task_lines.append(f"- **状态**: {status}")
+            task_lines.append(f"- **轮次**: {round_num}")
+            task_lines.append("")
+    else:
+        task_lines.append("暂无任务")
+        task_lines.append("")
+
+    task_lines.append("## 进度跟踪")
+    task_lines.append("")
+    task_lines.append("| 任务 ID | 状态 | 轮次 |")
+    task_lines.append("|---------|------|------|")
+
+    for task in cached_task_progress:
+        task_id = task.get("id", "-")
+        status = task.get("status", "pending")
+        round_num = task.get("round", 0)
+        task_lines.append(f"| {task_id} | {status} | {round_num} |")
+
+    task_content = "\n".join(task_lines)
+
+    # 原子写入
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.tmp', delete=False, encoding='utf-8') as tmp_file:
+        tmp_file.write(task_content)
+        tmp_path = tmp_file.name
+
+    try:
+        shutil.move(tmp_path, str(task_path))
+    except Exception:
+        Path(tmp_path).unlink(missing_ok=True)
+        raise
+        context_path = session_path / "CONTEXT.md"
+
+        # 构建 CONTEXT.md 内容
+        context_lines = [
+            "# Session 上下文",
+            "",
+            "## 术语定义",
+            ""
+        ]
+
+        for term, definition in cached_terminology.items():
+            context_lines.append(f"**{term}**")
+            context_lines.append(f": {definition}")
+            context_lines.append("")
+
+        context_content = "\n".join(context_lines)
+
+        # 原子写入：临时文件 + 重命名
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.tmp', delete=False, encoding='utf-8') as tmp_file:
+            tmp_file.write(context_content)
+            tmp_path = tmp_file.name
+
+        try:
+            shutil.move(tmp_path, str(context_path))
+        except Exception:
+            # 清理临时文件
+            Path(tmp_path).unlink(missing_ok=True)
+            raise
+
+    # 2. 同步 cached_task_progress 到 Task.md
+    cached_task_progress = state.get("cached_task_progress", [])
+    if cached_task_progress:
+        task_path = session_path / "Task.md"
+
+        # 构建 Task.md 内容
+        task_lines = [
+            "# 学习任务",
+            "",
+            f"总任务数: {len(cached_task_progress)}",
+            "",
+            "## 任务列表",
+            ""
+        ]
+
+        if cached_task_progress:
+            for i, task in enumerate(cached_task_progress, 1):
+                task_id = task.get("id", f"task_{i}")
+                status = task.get("status", "pending")
+                round_num = task.get("round", 0)
+                concept = task.get("concept", "未命名")
+
+                task_lines.append(f"### 任务 {i}: {concept}")
+                task_lines.append(f"- **ID**: {task_id}")
+                task_lines.append(f"- **状态**: {status}")
+                task_lines.append(f"- **轮次**: {round_num}")
+                task_lines.append("")
+
+        task_lines.append("## 进度跟踪")
+        task_lines.append("")
+        task_lines.append("| 任务 ID | 状态 | 轮次 |")
+        task_lines.append("|---------|------|------|")
+
+        for task in cached_task_progress:
+            task_id = task.get("id", "-")
+            status = task.get("status", "pending")
+            round_num = task.get("round", 0)
+            task_lines.append(f"| {task_id} | {status} | {round_num} |")
+
+        task_content = "\n".join(task_lines)
+
+        # 原子写入
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.tmp', delete=False, encoding='utf-8') as tmp_file:
+            tmp_file.write(task_content)
+            tmp_path = tmp_file.name
+
+        try:
+            shutil.move(tmp_path, str(task_path))
+        except Exception:
+            Path(tmp_path).unlink(missing_ok=True)
+            raise
