@@ -7,8 +7,8 @@ import sys
 from pathlib import Path
 
 from .config import Config, RESEARCH_TEMPLATES
-from .researcher_v2 import DeepSeekResearcher, SearchQuery, Source
-from .reporter_v2 import ReportGenerator
+from .researcher import DeepSeekResearcher, SearchQuery, Source
+from .reporter import ReportGenerator
 from .planner import TaskPlanner, ResearchPlan
 
 

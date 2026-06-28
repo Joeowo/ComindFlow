@@ -7,8 +7,7 @@ from pathlib import Path
 from datetime import datetime
 from typing import List, Dict, Optional
 
-from .config import Config
-from . import RESEARCH_TEMPLATES
+from .config import Config, RESEARCH_TEMPLATES
 
 
 class ReferenceFormatter:
