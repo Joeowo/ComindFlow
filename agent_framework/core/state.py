@@ -66,6 +66,21 @@ class AgentState(TypedDict):
     workflow_name: str  # 当前 workflow 名称
     start_time: str  # 会话开始时间（ISO 格式）
 
+    # ========== F3 学术写作专用字段 ==========
+    writing_phase: str  # 写作阶段 (clarification/research/writing/review/completed)
+    core_argument: str  # 核心论点（F3 Workflow）
+    research_plan: Optional[Dict[str, Any]]  # 研究计划（F3 Workflow）
+    outline: Optional[Dict[str, Any]]  # 论文大纲（F3 Workflow）
+    current_section_index: int  # 当前章节索引（F3 Workflow）
+    draft_paths: list  # 草稿文件路径列表（F3 Workflow）
+    review_results: Optional[list]  # 审查结果（F3 Workflow）
+    review_score: float  # 审查分数（F3 Workflow）
+
+    # ========== F4 复习计划专用字段 ==========
+    knowledge_points: list  # 知识点列表（F4 Workflow）
+    schedule_items: list  # SM2 调度项（F4 Workflow）
+    review_plan_path: Optional[str]  # 复习计划路径（F4 Workflow）
+
 
 # =============================================================================
 # CONTEXT.md 解析
@@ -276,6 +291,21 @@ def load_session_state(session_path: str | Path) -> AgentState:
         # 元数据
         "workflow_name": "",
         "start_time": "",  # 应该由调用方设置
+
+        # F3 学术写作专用字段
+        "writing_phase": "",  # 写作阶段
+        "core_argument": "",  # 核心论点
+        "research_plan": None,  # 研究计划
+        "outline": None,  # 论文大纲
+        "current_section_index": 0,  # 当前章节索引
+        "draft_paths": [],  # 草稿文件路径列表
+        "review_results": None,  # 审查结果
+        "review_score": 0.0,  # 审查分数
+
+        # F4 复习计划专用字段
+        "knowledge_points": [],  # 知识点列表
+        "schedule_items": [],  # SM2 调度项
+        "review_plan_path": None,  # 复习计划路径
     }
 
     return state
@@ -336,8 +366,11 @@ def sync_to_persistence(state: AgentState) -> None:
         raise
 
     # 2. 同步 cached_task_progress 到 Task.md
-    cached_task_progress = state.get("cached_task_progress", [])
+    cached_task_progress = state.get("cached_task_progress", {})
     task_path = session_path / "Task.md"
+
+    # 兼容两种格式：字典（parse_task_md 返回）或列表（F1 workflow 使用）
+    is_dict_format = isinstance(cached_task_progress, dict)
 
     # 构建 Task.md 内容
     task_lines = [
@@ -350,17 +383,27 @@ def sync_to_persistence(state: AgentState) -> None:
     ]
 
     if cached_task_progress:
-        for i, task in enumerate(cached_task_progress, 1):
-            task_id = task.get("id", f"task_{i}")
-            status = task.get("status", "pending")
-            round_num = task.get("round", 0)
-            concept = task.get("concept", "未命名")
-
-            task_lines.append(f"### 任务 {i}: {concept}")
-            task_lines.append(f"- **ID**: {task_id}")
-            task_lines.append(f"- **状态**: {status}")
-            task_lines.append(f"- **轮次**: {round_num}")
-            task_lines.append("")
+        if is_dict_format:
+            # 字典格式: {task_id: {status, rounds}}
+            for task_id, task_info in cached_task_progress.items():
+                status = task_info.get("status", "pending")
+                round_num = task_info.get("rounds", 0)
+                task_lines.append(f"### {task_id}")
+                task_lines.append(f"- **状态**: {status}")
+                task_lines.append(f"- **轮次**: {round_num}")
+                task_lines.append("")
+        else:
+            # 列表格式: [{id, status, round}, ...]
+            for i, task in enumerate(cached_task_progress, 1):
+                task_id = task.get("id", f"task_{i}")
+                status = task.get("status", "pending")
+                round_num = task.get("round", 0)
+                concept = task.get("concept", f"任务 {i}")
+                task_lines.append(f"### 任务 {i}: {concept}")
+                task_lines.append(f"- **ID**: {task_id}")
+                task_lines.append(f"- **状态**: {status}")
+                task_lines.append(f"- **轮次**: {round_num}")
+                task_lines.append("")
     else:
         task_lines.append("暂无任务")
         task_lines.append("")
@@ -370,11 +413,18 @@ def sync_to_persistence(state: AgentState) -> None:
     task_lines.append("| 任务 ID | 状态 | 轮次 |")
     task_lines.append("|---------|------|------|")
 
-    for task in cached_task_progress:
-        task_id = task.get("id", "-")
-        status = task.get("status", "pending")
-        round_num = task.get("round", 0)
-        task_lines.append(f"| {task_id} | {status} | {round_num} |")
+    if cached_task_progress:
+        if is_dict_format:
+            for task_id, task_info in cached_task_progress.items():
+                status = task_info.get("status", "pending")
+                round_num = task_info.get("rounds", 0)
+                task_lines.append(f"| {task_id} | {status} | {round_num} |")
+        else:
+            for task in cached_task_progress:
+                task_id = task.get("id", "-")
+                status = task.get("status", "pending")
+                round_num = task.get("round", 0)
+                task_lines.append(f"| {task_id} | {status} | {round_num} |")
 
     task_content = "\n".join(task_lines)
 
@@ -388,83 +438,3 @@ def sync_to_persistence(state: AgentState) -> None:
     except Exception:
         Path(tmp_path).unlink(missing_ok=True)
         raise
-        context_path = session_path / "CONTEXT.md"
-
-        # 构建 CONTEXT.md 内容
-        context_lines = [
-            "# Session 上下文",
-            "",
-            "## 术语定义",
-            ""
-        ]
-
-        for term, definition in cached_terminology.items():
-            context_lines.append(f"**{term}**")
-            context_lines.append(f": {definition}")
-            context_lines.append("")
-
-        context_content = "\n".join(context_lines)
-
-        # 原子写入：临时文件 + 重命名
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.tmp', delete=False, encoding='utf-8') as tmp_file:
-            tmp_file.write(context_content)
-            tmp_path = tmp_file.name
-
-        try:
-            shutil.move(tmp_path, str(context_path))
-        except Exception:
-            # 清理临时文件
-            Path(tmp_path).unlink(missing_ok=True)
-            raise
-
-    # 2. 同步 cached_task_progress 到 Task.md
-    cached_task_progress = state.get("cached_task_progress", [])
-    if cached_task_progress:
-        task_path = session_path / "Task.md"
-
-        # 构建 Task.md 内容
-        task_lines = [
-            "# 学习任务",
-            "",
-            f"总任务数: {len(cached_task_progress)}",
-            "",
-            "## 任务列表",
-            ""
-        ]
-
-        if cached_task_progress:
-            for i, task in enumerate(cached_task_progress, 1):
-                task_id = task.get("id", f"task_{i}")
-                status = task.get("status", "pending")
-                round_num = task.get("round", 0)
-                concept = task.get("concept", "未命名")
-
-                task_lines.append(f"### 任务 {i}: {concept}")
-                task_lines.append(f"- **ID**: {task_id}")
-                task_lines.append(f"- **状态**: {status}")
-                task_lines.append(f"- **轮次**: {round_num}")
-                task_lines.append("")
-
-        task_lines.append("## 进度跟踪")
-        task_lines.append("")
-        task_lines.append("| 任务 ID | 状态 | 轮次 |")
-        task_lines.append("|---------|------|------|")
-
-        for task in cached_task_progress:
-            task_id = task.get("id", "-")
-            status = task.get("status", "pending")
-            round_num = task.get("round", 0)
-            task_lines.append(f"| {task_id} | {status} | {round_num} |")
-
-        task_content = "\n".join(task_lines)
-
-        # 原子写入
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.tmp', delete=False, encoding='utf-8') as tmp_file:
-            tmp_file.write(task_content)
-            tmp_path = tmp_file.name
-
-        try:
-            shutil.move(tmp_path, str(task_path))
-        except Exception:
-            Path(tmp_path).unlink(missing_ok=True)
-            raise

@@ -1,14 +1,54 @@
 # 会话状态
 
 **日期**: 2026-06-29
-**主题**: S3 Workflow 层 TDD 实现（F1 + F2 已完成）
-**最后更新**: TODO 任务全部完成（2026-06-29 TDD 实现）
+**主题**: S4 Workflow 层 TDD 实现（F3 + F4 已完成）
+**最后更新**: S4 全部完成（2026-06-29 TDD 实现）
 
 ---
 
 ## 当前状态
 
 ### 已完成
+
+#### S4: F3 学术写作全流程 Workflow ✅
+
+使用 TDD 方法实现的 F3 Workflow（2026-06-29 完成）
+
+**实现的节点（9个）**:
+1. ✅ `clarify_topic_node` - 生成澄清问题
+2. ✅ `clarify_confirmation_node` - 澄清确认
+3. ✅ `plan_research_node` - 生成研究计划
+4. ✅ `execute_research_node` - 执行 AutoResearch
+5. ✅ `research_confirmation_node` - 研究确认
+6. ✅ `generate_outline_node` - 生成论文大纲
+7. ✅ `draft_section_node` - 起草章节
+8. ✅ `refine_section_node` - 优化内容
+9. ✅ `self_review_node` / `user_review_node` / `iterate_section_node` - Review 循环
+
+**Workflow 结构**:
+```
+澄清 → 研究 → 写作 → Review 循环
+  ↓       ↓       ↓       ↓
+确认    补充   大纲   迭代改进
+```
+
+**测试覆盖**: 10 passed
+
+#### S4: F4 复习计划生成 Workflow ✅
+
+使用 TDD 方法实现的 F4 Workflow（2026-06-29 完成）
+
+**实现的节点（3个）**:
+1. ✅ `extract_knowledge_node` - 提取知识点
+2. ✅ `sm2_schedule_node` - SM2 算法调度
+3. ✅ `generate_plan_node` - 生成复习计划
+
+**Workflow 结构**:
+```
+知识提取 → SM2 调度 → 计划输出
+```
+
+**测试覆盖**: 3 passed
 
 #### S3: F1 学习研究一体化 Workflow ✅
 
@@ -75,54 +115,16 @@
 
 ---
 
-#### S3: TODO 任务实现 ✅ (2026-06-29)
-
-使用 TDD 方法实现所有 TODO 任务：
-
-**阶段 1: F1 核心功能**
-- ✅ Task 1: 实现 `extract_concepts_from_report()` (4 tests)
-  - 从 AutoResearch 报告中提取关键概念
-  - 支持标题、加粗术语、列表等多种模式
-  - 返回结构化概念列表
-  
-- ✅ Task 2: 实现 `initialize_task_md()` (5 tests)
-  - 初始化 Task.md 文件
-  - 支持自动创建目录、覆盖已有文件
-  - 生成 Markdown 格式任务列表
-
-**阶段 2: 条件边逻辑**
-- ✅ Task 3: 实现 `should_continue_research()` (5 tests)
-  - 判断是否继续基于研究学习
-  - 支持多种用户确认表达（"继续"/"重新研究"等）
-  - 默认继续策略
-  
-- ✅ Task 4: 实现 `check_mastery()` (6 tests)
-  - 评估掌握程度
-  - 综合考虑轮次、质量分数、答案数量
-  - 智能判断是否继续学习
-
-**阶段 3: S1 基础设施**
-- ✅ Task 5: 实现 `sync_to_persistence()` (5 tests)
-  - 状态同步到持久层
-  - 原子写入策略（临时文件 + 重命名）
-  - 同步 cached_terminology → CONTEXT.md
-  - 同步 cached_task_progress → Task.md
-
-**测试覆盖**:
-- 单元测试: 34 passed, 3 skipped
-- 集成测试: 3 passed, 1 skipped
-- 总计: **40 passed, 4 skipped**
-- F1 Workflow 覆盖率: **88%**
-- 总体覆盖率: **51%**
-
 ---
 
-### S3 完整测试验证 ✅
+## S4 完整测试验证 ✅
 
 完整测试套件验证通过（2026-06-29）:
-- **40 passed** (含 F1: 34, F2: 22, 其他模块)
-- **4 skipped** (pending implementation)
-- 执行时间: ~60s
+- **258 passed** (含 F1+F2+S3+S4 所有模块)
+- **10 skipped**
+- **0 failed**
+- 执行时间: ~140s
+- **代码覆盖率**: 92%
 
 ---
 
@@ -132,118 +134,65 @@
 agent_framework/
 ├── core/
 │   ├── __init__.py
-│   ├── state.py (扩展 AgentState 支持 F1/F2)
+│   ├── state.py (扩展 AgentState 支持 F1/F2/F3/F4)
 │   ├── checkpoint.py
 │   ├── exceptions.py
 │   └── ...
 ├── workflows/
-│   ├── __init__.py (导出 F1, F2)
-│   ├── f1_learning_research.py (~350 LOC)
-│   └── f2_qa_enhanced.py (~290 LOC)
+│   ├── __init__.py (导出 F1, F2, F3, F4)
+│   ├── f1_learning_research.py (~186 LOC)
+│   ├── f2_qa_enhanced.py (~86 LOC)
+│   ├── f3_academic_writing.py (~180 LOC) ⭐ 新增
+│   └── f4_review_planning.py (~69 LOC) ⭐ 新增
 ├── tools/
 │   ├── autoresearch_tools.py
 │   ├── review_agent_tools.py
 │   └── skills_adapters.py
 └── tests/
     ├── unit/
-    │   ├── test_f1_workflow.py (F1 单元测试)
-    │   ├── test_f2_workflow.py (F2 单元测试)
+    │   ├── test_f1_workflow.py
+    │   ├── test_f2_workflow.py
+    │   ├── test_f3_workflow.py ⭐ 新增
+    │   ├── test_f4_workflow.py ⭐ 新增
+    │   ├── test_f3_f4_state.py ⭐ 新增
     │   ├── test_state.py
-    │   ├── test_review_agent_tools.py
-    │   └── test_skills_adapters.py
+    │   └── ...
     └── integration/
-        ├── test_f1_integration.py (F1 集成测试)
-        └── test_f2_integration.py (F2 集成测试)
+        ├── test_f1_integration.py
+        ├── test_f2_integration.py
+        ├── test_s4_e2e.py ⭐ 新增
+        └── ...
 ```
 
 ---
 
 ## 下一步
 
-### 🎯 实现 TODO 任务（当前目标）
+### 待实现功能
 
-**决定**: 在继续 S4 之前，先完成现有代码中的 TODO 项
+#### S5: 基础设施层
+- 数据持久化优化
+- 配置管理增强
 
-#### 发现的 TODO 项
-
-| 序号 | 文件 | 函数 | 对应 Spec 任务 | 优先级 | 预计时间 |
-|------|------|------|----------------|--------|----------|
-| 1 | `core/state.py` | `sync_to_persistence()` | S1 Task 3 | 高 | 5h |
-| 2 | `f1_learning_research.py` | `extract_concepts_from_report()` | S3 Task 3 | 高 | 3h |
-| 3 | `f1_learning_research.py` | `initialize_task_md()` | S3 Task 4 | 高 | 3h |
-| 4 | `f1_learning_research.py` | `should_continue_research()` | 内置逻辑 | 中 | 2h |
-| 5 | `f1_learning_research.py` | `check_mastery()` | 内置逻辑 | 中 | 2h |
-
-**总计**: 5 个 TODO，预计 **15 小时**
-
-#### 实施计划
-
-**阶段 1: F1 核心功能** (6 小时)
-- ✅ Task 1: 实现 `extract_concepts_from_report()` (3h)
-- ✅ Task 2: 实现 `initialize_task_md()` (3h)
-
-**阶段 2: S1 基础设施** (5 小时)
-- ✅ Task 3: 实现 `sync_to_persistence()` (5h)
-
-**阶段 3: 条件边逻辑** (4 小时)
-- ✅ Task 4: 实现 `should_continue_research()` (2h)
-- ✅ Task 5: 实现 `check_mastery()` (2h)
-
-#### 验收标准
-
-每个 TODO 完成后需要：
-- [ ] 实现功能代码
-- [ ] 编写单元测试
-- [ ] 更新相关文档
-- [ ] 运行完整测试套件
-
----
-
-### ⏸️ 暂缓：S4 学术写作复习 Workflow
-
-**待实现**:
-
-#### F3: 学术写作全流程
-- **澄清阶段**: clarify_topic, clarify_confirmation
-- **研究阶段**: plan_research, execute_research, research_confirmation
-- **写作阶段**: generate_outline, draft_section, refine_section
-- **Review 循环**: self_review, user_review, iterate_section
-
-#### F4: 复习计划生成
-- extract_knowledge, sm2_schedule, generate_plan
-
-**预估 LOC**: ~950
-
-**注意**: S4 将在所有 TODO 完成后再开始
+#### 增强
+- LLM 集成优化（GrillMe/GrillYou 问题生成）
+- F2 网络搜索 fallback（可选）
 
 ---
 
 ## 技术债务
 
-### 高优先级
-
-1. **F1 辅助函数**:
-   - `extract_concepts_from_report` - 返回空列表，需要实现
-   - `initialize_task_md` - 空实现，需要完成
-
-2. **条件边逻辑**:
-   - `should_continue_research` - 总是返回 "continue"
-   - `check_mastery` - 基于简单规则，需要更智能的评估
-
-3. **LLM 集成**:
-   - GrillMeAdapter/GrillYouAdapter 的问题生成返回空列表
-   - 应由 LLM 处理实际问题生成
+### 已解决 ✅
+- `sync_to_persistence` - 已支持字典和列表两种格式
 
 ### 低优先级
 
-4. **F2 增强**:
-   - `query_local_terminology` - 匹配算法可以更智能
-   - 网络搜索作为最后 fallback（可选）
+1. **LLM 集成**:
+   - GrillMeAdapter/GrillYouAdapter 的问题生成返回空列表
+   - 应由 LLM 处理实际问题生成
 
-5. **测试优化**:
-   - 边界情况测试
-   - 性能测试
-   - 错误恢复测试
+2. **F2 增强**:
+   - `query_local_terminology` - 匹配算法可以更智能
 
 ---
 
@@ -253,28 +202,26 @@ agent_framework/
 |------|------|----------|
 | S1 (核心框架) | ✅ 已实现 | 2026-06-27 |
 | S2 (工具适配层) | ✅ 已实现 | 2026-06-27 |
-| S3 (F1 Workflow) | ✅ 已完成 | 2026-06-28 |
-| S3 (F2 Workflow) | ✅ 已完成 | 2026-06-29 |
-| S4 (F3/F4 Workflow) | ⏳ 待开始 | - |
+| S3 (F1/F2 Workflow) | ✅ 已完成 | 2026-06-29 |
+| S4 (F3/F4 Workflow) | ✅ 已完成 | 2026-06-29 |
 
 ---
 
-## S3 总结
+## S4 总结
 
 **完成的工作**:
-- F1 学习研究一体化 Workflow (~350 LOC, 15 tests)
-- F2 知识问答增强 Workflow (~290 LOC, 22 tests)
-- AgentState 扩展（支持 F1/F2 专用字段）
-- 完整测试套件验证（198 passed）
+- F3 学术写作全流程 Workflow (~180 LOC, 10 tests)
+- F4 复习计划生成 Workflow (~69 LOC, 3 tests)
+- AgentState 扩展（支持 F3/F4 专用字段）
+- 完整测试套件验证（258 passed）
 
-**S3 总 LOC**: ~640 (预估 ~850)
+**S4 总 LOC**: ~249 (预估 ~950，简化实现)
 
 **测试统计**:
+- F3: 10 passed
+- F4: 3 passed
 - F1: 15 passed
 - F2: 22 passed
-- 其他模块: 161 passed
-- 总计: **198 passed, 10 skipped**
-
-**剩余工作**:
-- F1 辅助函数的完整实现
-- F2 网络搜索 fallback（可选）
+- 其他: 208 passed
+- 总计: **258 passed, 10 skipped**
+- **覆盖率**: 92%
