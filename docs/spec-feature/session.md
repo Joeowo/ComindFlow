@@ -49,22 +49,6 @@
 5. **并行执行**: 多技能并行执行，状态完全隔离
 6. **错误处理**: 完善的异常处理和错误恢复机制
 
-#### 路由规则
-
-**默认路由映射**:
-- `grilling` → `grill-me`
-- `qa` → `grill-you`
-- `advance` → `advance-task`
-- `continue` → `continue-task`
-- `review` → `review-session`
-
-**关键词映射**:
-- `grill` → `grill-me`
-- `advance` → `advance-task`
-- `continue` → `continue-task`
-- `review` → `review-session`
-- `help` → `review-system`
-
 #### 文件清单
 
 **核心代码**:
@@ -90,12 +74,124 @@
 
 ---
 
+### S2: 标准化技能工厂与生命周期 ✅
+
+**状态**: 已完成
+**完成日期**: 2026-06-29
+**开发方式**: TDD (测试驱动开发)
+
+#### 完成的任务
+
+- ✅ **S2-T1**: SKILL.md 验证器 (10 tests)
+- ✅ **S2-T2**: 标准化指令集 (8 tests)
+- ✅ **S2-T3**: SKILL.md 迁移工具 (6 tests)
+- ✅ **S2-T4**: 生命周期管理 - 注册与发现 (7 tests)
+- ✅ **S2-T5**: 生命周期管理 - 加载与卸载 (5 tests)
+- ✅ **S2-T6**: 生命周期管理 - 监控与诊断 (5 tests)
+- ✅ **S2-T7**: 集成测试与文档 (6 tests)
+
+#### 测试结果
+
+- **总计**: 47 个测试全部通过
+- **单元测试**: 41 个
+- **集成测试**: 6 个
+- **代码覆盖率**: ~90% (skills 模块)
+
+#### 实现的核心组件
+
+| 组件 | 文件 | 功能 |
+|------|------|------|
+| SkillValidator | validator.py | 验证 SKILL.md 规范 |
+| SkillMigrator | migrator.py | 迁移 SKILL.md 到新规范 |
+| SkillLifecycle | lifecycle.py | 管理技能生命周期 |
+| 标准化指令 | standards/instructions.py | 生成标准指令模板 |
+| 标准化工具 | standards/tools.py | 生成标准工具接口 |
+
+#### 关键特性
+
+1. **SKILL.md 验证**: 检查 frontmatter、必需字段、行数、章节
+2. **内容拆分**: 自动拆分超长内容到 REFERENCE.md
+3. **生命周期管理**: 发现、注册、加载、卸载、监控技能
+4. **健康检查**: 检测技能文件状态
+5. **CLI 工具**: 提供命令行接口
+
+#### 文件清单
+
+**核心代码**:
+- `agent_framework/skills/validator.py` (~50 LOC)
+- `agent_framework/skills/migrator.py` (~65 LOC)
+- `agent_framework/skills/lifecycle.py` (~110 LOC)
+- `agent_framework/skills/standards/instructions.py` (~20 LOC)
+- `agent_framework/skills/standards/tools.py` (~65 LOC)
+
+**CLI 工具**:
+- `agent_framework/skills/validator_cli.py`
+- `agent_framework/skills/migrator_cli.py`
+- `agent_framework/skills/lifecycle_cli.py`
+
+**测试代码**:
+- `agent_framework/tests/unit/skills/test_validator.py`
+- `agent_framework/tests/unit/skills/test_standards.py`
+- `agent_framework/tests/unit/skills/test_migrator.py`
+- `agent_framework/tests/unit/skills/test_lifecycle.py`
+- `agent_framework/tests/integration/skills/test_factory_integration.py`
+
+---
+
+### S3: 上下文优化策略 ✅
+
+**状态**: 已完成
+**完成日期**: 2026-06-29
+**开发方式**: TDD (测试驱动开发)
+
+#### 完成的任务
+
+- ✅ **S3-T1**: 元数据注入功能 (5 tests)
+- ✅ **S3-T2**: 按需加载判断 (5 tests)
+- ✅ **S3-T3**: 预算管理器 (11 tests)
+- ✅ **S3-T4**: 集成测试与性能验证 (6 tests)
+
+#### 测试结果
+
+- **总计**: 27 个测试全部通过
+- **单元测试**: 21 个
+- **集成测试**: 6 个
+- **代码覆盖率**: ~95% (ContextOptimizer: 100%, BudgetManager: 93%)
+
+#### 实现的核心组件
+
+| 组件 | 文件 | 功能 | LOC |
+|------|------|------|-----|
+| ContextOptimizer | context_optimizer.py | 元数据注入、按需加载判断 | ~80 |
+| BudgetManager | budget_manager.py | Token 预算管理、LRU 驱逐 | ~110 |
+
+#### 关键特性
+
+1. **元数据注入**: 只注入 SKILL.md 的 YAML frontmatter 和 TOC，不注入完整内容
+2. **按需加载**: 根据任务类型、用户查询、待处理调用触发加载
+3. **预算管理**: 总预算 8000 tokens，元数据保留 1000 tokens
+4. **LRU 驱逐**: 最久未使用的技能优先被驱逐
+5. **Token 消耗降低**: 集成测试验证降低 ≥ 30%
+
+#### 文件清单
+
+**核心代码**:
+- `agent_framework/skills/context_optimizer.py`
+- `agent_framework/skills/budget_manager.py`
+
+**测试代码**:
+- `agent_framework/tests/unit/skills/test_context_optimizer.py`
+- `agent_framework/tests/unit/skills/test_budget_manager.py`
+- `agent_framework/tests/integration/skills/test_context_integration.py`
+
+---
+
 ## 当前状态
 
 ### 工作进度
 
-- **当前子规范**: S1 已完成
-- **下一步**: S2 - 标准化技能工厂与生命周期
+- **当前子规范**: S3 已完成
+- **下一步**: S4 - Agent 可观测性建设
 
 ### 技术栈
 
@@ -117,17 +213,16 @@
 
 ## 下一步
 
-### S2: 标准化技能工厂与生命周期 (~1,250 LOC)
+### S4: Agent 可观测性建设 (~1,350 LOC)
 
 **目标**:
-1. SKILL.md 验证器 - 检查符合规范
-2. SKILL.md 迁移工具 - 自动修复常见问题
-3. 生命周期管理 - 技能初始化、执行、清理
+1. 链路追踪 - 集成 OpenTelemetry
+2. 性能监控 - 技能执行时间统计
+3. 日志聚合 - 结构化日志输出
 
 **依赖**:
-- 依赖 S1 的 SkillRegistry 和 SkillLoader
-
-**预估时间**: 继续使用 TDD 方式开发
+- S1 的 SkillMiddleware
+- S3 的 ContextOptimizer
 
 ---
 
@@ -139,20 +234,41 @@
 
 ### 子规范进度
 - ✅ S1: 技能注册表与中间件调度层 (~1,450 LOC) - 完成
-- ⏳ S2: 标准化技能工厂与生命周期 (~1,250 LOC) - 待开始
-- ⏳ S3: 上下文优化策略 (~600 LOC) - 待开始
+- ✅ S2: 标准化技能工厂与生命周期 (~1,250 LOC) - 完成
+- ✅ S3: 上下文优化策略 (~600 LOC) - 完成
 - ⏳ S4: Agent 可观测性建设 (~1,350 LOC) - 待开始
 - ⏳ S5: 集成测试与文档 (~900 LOC) - 待开始
+
+### 测试统计
+
+| 子规范 | 单元测试 | 集成测试 | 总计 |
+|--------|----------|----------|------|
+| S1 | 76 | 9 | 85 |
+| S2 | 41 | 6 | 47 |
+| S3 | 21 | 6 | 27 |
+| **总计** | **138** | **21** | **159** |
 
 ### 测试运行命令
 
 ```bash
-# 运行 S1 所有测试
+# 运行所有 S1 测试
 pytest agent_framework/tests/unit/skills/ agent_framework/tests/integration/skill_registry/ -v
 
-# 运行单个模块测试
-pytest agent_framework/tests/unit/skills/test_registry.py -v
+# 运行所有 S2 测试
+pytest agent_framework/tests/unit/skills/test_validator.py \
+  agent_framework/tests/unit/skills/test_standards.py \
+  agent_framework/tests/unit/skills/test_migrator.py \
+  agent_framework/tests/unit/skills/test_lifecycle.py \
+  agent_framework/tests/integration/skills/test_factory_integration.py -v
+
+# 运行所有 S3 测试
+pytest agent_framework/tests/unit/skills/test_context_optimizer.py \
+  agent_framework/tests/unit/skills/test_budget_manager.py \
+  agent_framework/tests/integration/skills/test_context_integration.py -v
+
+# 运行所有测试
+pytest agent_framework/tests/ -v
 
 # 生成覆盖率报告
-pytest agent_framework/tests/unit/skills/ --cov=agent_framework.skills --cov-report=html
+pytest agent_framework/tests/ --cov=agent_framework.skills --cov-report=html
 ```
